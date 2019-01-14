@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
+import { createLocalAudioTrack, createLocalVideoTrack } from 'twilio-video'
 import Controls from './Controls'
 
 const Wrapper = styled.div`
@@ -70,25 +71,30 @@ class Video extends React.Component {
     participant.removeListener(TRACK_UNSUBSCRIBED, this.handleRemoteTrackRemove)
   }
   handleRemoteTrackCreate = remoteTrack => {
+    console.log(remoteTrack)
     if (remoteTrack.kind === VIDEO) {
       this.setState(({ remoteVideoTracks }) => ({
-        remoteVideoTracks: { ...remoteVideoTracks, [remoteTrack.id]: remoteTrack }
+        remoteVideoTracks: { ...remoteVideoTracks, [remoteTrack.name]: remoteTrack }
       }))
     } else if (remoteTrack.kind === AUDIO) {
       this.setState(({ remoteAudioTracks }) => ({
-        remoteAudioTracks: { ...remoteAudioTracks, [remoteTrack.id]: remoteTrack }
+        remoteAudioTracks: { ...remoteAudioTracks, [remoteTrack.name]: remoteTrack }
       }))
     }
   }
   handleRemoteTrackRemove = remoteTrack => {
     if (remoteTrack.kind === VIDEO) {
-      this.setState(({ remoteVideoTracks: { [remoteTrack.id]: deletedTrack, ...restTracks } }) => ({
-        remoteVideoTracks: restTracks
-      }))
+      this.setState(
+        ({ remoteVideoTracks: { [remoteTrack.name]: deletedTrack, ...restTracks } }) => ({
+          remoteVideoTracks: restTracks
+        })
+      )
     } else if (remoteTrack.kind === AUDIO) {
-      this.setState(({ remoteAudioTracks: { [remoteTrack.id]: deletedTrack, ...restTracks } }) => ({
-        remoteAudioTracks: restTracks
-      }))
+      this.setState(
+        ({ remoteAudioTracks: { [remoteTrack.name]: deletedTrack, ...restTracks } }) => ({
+          remoteAudioTracks: restTracks
+        })
+      )
     }
   }
   unpublishLocalTrack = localTrack => {
@@ -110,18 +116,20 @@ class Video extends React.Component {
   }
   handleToggleVideoClick = async () => {
     const { localVideoTrack } = this.state
+    console.log(localVideoTrack)
     if (!localVideoTrack) {
-      const localVideoTrack = await createLocalVideoTrack({ width: 1280 })
-      this.publishLocalTrack(localVideoTrack)
+      const newLocalVideoTrack = await createLocalVideoTrack({ width: 1280 })
+      this.publishLocalTrack(newLocalVideoTrack)
     } else {
       this.unpublishLocalTrack(localVideoTrack)
     }
   }
   handleToggleAudioClick = async () => {
     const { localAudioTrack } = this.state
+    console.log(localAudioTrack)
     if (!localAudioTrack) {
-      const localAudioTrack = await createLocalAudioTrack()
-      this.publishLocalTrack(localAudioTrack)
+      const newLocalAudioTrack = await createLocalAudioTrack()
+      this.publishLocalTrack(newLocalAudioTrack)
     } else {
       this.unpublishLocalTrack(localAudioTrack)
     }
@@ -136,7 +144,7 @@ class Video extends React.Component {
       <Wrapper>
         <Controls
           isVideoEnabled={!!localVideoTrack}
-          localAudioTrack={!!localAudioTrack}
+          isAudioEnabled={!!localAudioTrack}
           onToggleVideoClick={this.handleToggleVideoClick}
           onToggleAudioClick={this.handleToggleAudioClick}
         />

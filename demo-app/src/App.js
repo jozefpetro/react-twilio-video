@@ -1,9 +1,16 @@
 import React from 'react'
-import { H1 } from 'react-twilio-video'
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom'
+import VideoSession from './routes/VideoSession'
 
 class App extends React.Component {
   render() {
-    return <H1>create-react-app</H1>
+    return (
+      <Router>
+        <Switch>
+          <Route path="/video-session/:token" component={VideoSession} />
+        </Switch>
+      </Router>
+    )
   }
 }
 
