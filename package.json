@@ -1,0 +1,24 @@
+{
+  "name": "react-twilio-video",
+  "version": "0.0.1",
+  "description": "React video component integrated with twilio-video sdk",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jozefpetro/react-twilio-video.git"
+  },
+  "keywords": [
+    "react",
+    "video",
+    "twilio"
+  ],
+  "author": "jozef petro",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jozefpetro/react-twilio-video/issues"
+  },
+  "homepage": "https://github.com/jozefpetro/react-twilio-video#readme"
+}
