@@ -15,5 +15,7 @@ module.exports = {
     babel({ exclude: 'node_modules/**' }),
     commonJS({ include: 'node_modules/**' }),
     prettier(prettierConfig)
-  ]
+  ],
+  external: ['styled-components'],
+  globals: { 'styled-components': 'styled' }
 }
