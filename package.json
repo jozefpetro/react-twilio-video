@@ -2,7 +2,7 @@
   "name": "react-twilio-video",
   "version": "0.0.1",
   "description": "React video component integrated with twilio-video sdk",
-  "main": "src/index.js",
+  "main": "bundle.js",
   "scripts": {
     "start": "rollup --config rollup.config.js --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
