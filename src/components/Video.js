@@ -21,6 +21,7 @@ const PARTICIPANT_CONNECTED = 'participantConnected'
 const PARTICIPANT_DISCONNECTED = 'participantDisconnected'
 const TRACK_SUBSCRIBED = 'trackSubscribed'
 const TRACK_UNSUBSCRIBED = 'trackUnsubscribed'
+const DOMINANT_SPEAKER_CHANGED = 'dominantSpeakerChanged'
 
 const AUDIO = 'audio'
 const VIDEO = 'video'
@@ -29,6 +30,7 @@ const getMediaStreamTrack = track => track.mediaStreamTrack
 
 class Video extends React.Component {
   state = {
+    dominantRemoteVideoTrack: null,
     remoteVideoTracks: {},
     remoteAudioTracks: {},
     localVideoTrack: null,
@@ -61,6 +63,7 @@ class Video extends React.Component {
         preferredVideoCodecs: ['H264', 'VP8'],
         audio: true,
         video: false,
+        dominantSpeaker: true,
         ...connectSettings
       }
     )
@@ -69,6 +72,7 @@ class Video extends React.Component {
     })
     this.room.on(PARTICIPANT_CONNECTED, this.handleParticipantConnected)
     this.room.on(PARTICIPANT_DISCONNECTED, this.handleParticipantDisconnected)
+    this.room.on(DOMINANT_SPEAKER_CHANGED, this.handleDominantSpeakerChanged)
     const localAudioTrack = this.room.localParticipant.audioTracks.values().next().value
     const localVideoTrack = this.room.localParticipant.videoTracks.values().next().value
     if (localAudioTrack) {
@@ -76,6 +80,16 @@ class Video extends React.Component {
     }
     if (localVideoTrack) {
       this.publishLocalTrack(localVideoTrack)
+    }
+  }
+  handleDominantSpeakerChanged = remoteParticipant => {
+    if (remoteParticipant) {
+      const dominantRemoteVideoTrack = remoteParticipant.videoTracks.values().next().value
+      if (dominantRemoteVideoTrack) {
+        this.setState({ dominantRemoteVideoTrack })
+      }
+    } else {
+      this.setState({ dominantRemoteVideoTrack: null })
     }
   }
   handleParticipantConnected = participant => {
@@ -171,7 +185,7 @@ class Video extends React.Component {
     const remoteAudioTracksArr = Object.values(remoteAudioTracks)
     const isRemoteVideoTrack = remoteVideoTracksArr.length > 0
     const isRemoteAudioTrack = remoteAudioTracksArr.length > 0
-    console.log(this.state)
+    console.log(this.state.dominantRemoteVideoTrack)
     return (
       <Wrapper>
         <ControlsComp
@@ -214,7 +228,7 @@ class Video extends React.Component {
 
 Video.defaultProps = {
   loadingComp: Loading,
-  errorComp: Erorr,
+  errorComp: Error,
   localVideoComp: LocalVideo,
   remoteVideoComp: RemoteVideo,
   controlsComp: Controls
