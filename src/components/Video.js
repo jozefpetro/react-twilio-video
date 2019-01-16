@@ -1,27 +1,20 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import { createLocalAudioTrack, createLocalVideoTrack } from 'twilio-video'
+import { connect, createLocalAudioTrack, createLocalVideoTrack } from 'twilio-video'
+import LocalVideo from './LocalVideo'
+import RemoteVideo from './RemoteVideo'
 import Controls from './Controls'
+import Loading from './Loading'
+import Error from './Error'
 
 const Wrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
   width: 100%;
   height: 100%;
-`
-
-const RemoteVideo = styled.video`
-  width: 100%;
-  height: 100%;
-`
-
-const LocalVideo = styled.video`
-  position: absolute;
-  width: 20%;
-  min-width: 150px;
-  top: 20px;
-  right: 20px;
-  border-radius: 6px;
 `
 
 const PARTICIPANT_CONNECTED = 'participantConnected'
@@ -39,20 +32,18 @@ class Video extends React.Component {
     remoteVideoTracks: {},
     remoteAudioTracks: {},
     localVideoTrack: null,
-    localVideoTrack: null
+    localVideoTrack: null,
+    isRoomConnecting: false,
+    connectRoomError: null
   }
   room = null
   async componentDidMount() {
-    const { room } = this.props
-    this.room = room
-    this.room.participants.forEach(participant => {
-      this.handleParticipantConnected(participant)
-    })
-    this.room.on(PARTICIPANT_CONNECTED, this.handleParticipantConnected)
-    this.room.on(PARTICIPANT_DISCONNECTED, this.handleParticipantDisconnected)
-    const localAudioTrack = this.room.localParticipant.audioTracks.values().next().value
-    if (localAudioTrack) {
-      this.publishLocalTrack(localAudioTrack)
+    this.setState({ isRoomConnecting: true })
+    try {
+      await this.initRoom()
+      this.setState({ isRoomConnecting: false })
+    } catch (error) {
+      this.setState({ connectRoomError: error.message, isRoomConnecting: false })
     }
   }
   componentWillUnmount() {
@@ -62,16 +53,44 @@ class Video extends React.Component {
     if (localAudioTrack) this.unpublishLocalTrack(localAudioTrack)
     this.room.disconnect()
   }
+  initRoom = async () => {
+    const { token, connectSettings } = this.props
+    this.room = await connect(
+      token,
+      {
+        preferredVideoCodecs: ['H264', 'VP8'],
+        audio: true,
+        video: false,
+        ...connectSettings
+      }
+    )
+    this.room.participants.forEach(participant => {
+      this.handleParticipantConnected(participant)
+    })
+    this.room.on(PARTICIPANT_CONNECTED, this.handleParticipantConnected)
+    this.room.on(PARTICIPANT_DISCONNECTED, this.handleParticipantDisconnected)
+    const localAudioTrack = this.room.localParticipant.audioTracks.values().next().value
+    const localVideoTrack = this.room.localParticipant.videoTracks.values().next().value
+    if (localAudioTrack) {
+      this.publishLocalTrack(localAudioTrack)
+    }
+    if (localVideoTrack) {
+      this.publishLocalTrack(localVideoTrack)
+    }
+  }
   handleParticipantConnected = participant => {
+    const { onParticipantConnected } = this.props
+    if (onParticipantConnected) onParticipantConnected(participant)
     participant.on(TRACK_SUBSCRIBED, this.handleRemoteTrackCreate)
     participant.on(TRACK_UNSUBSCRIBED, this.handleRemoteTrackRemove)
   }
   handleParticipantDisconnected = participant => {
+    const { onparticipantDisconnected } = this.props
+    if (onparticipantDisconnected) onParticipantConnected(onparticipantDisconnected)
     participant.removeListener(TRACK_SUBSCRIBED, this.handleRemoteTrackCreate)
     participant.removeListener(TRACK_UNSUBSCRIBED, this.handleRemoteTrackRemove)
   }
   handleRemoteTrackCreate = remoteTrack => {
-    console.log(remoteTrack)
     if (remoteTrack.kind === VIDEO) {
       this.setState(({ remoteVideoTracks }) => ({
         remoteVideoTracks: { ...remoteVideoTracks, [remoteTrack.name]: remoteTrack }
@@ -116,7 +135,6 @@ class Video extends React.Component {
   }
   handleToggleVideoClick = async () => {
     const { localVideoTrack } = this.state
-    console.log(localVideoTrack)
     if (!localVideoTrack) {
       const newLocalVideoTrack = await createLocalVideoTrack({ width: 1280 })
       this.publishLocalTrack(newLocalVideoTrack)
@@ -126,7 +144,6 @@ class Video extends React.Component {
   }
   handleToggleAudioClick = async () => {
     const { localAudioTrack } = this.state
-    console.log(localAudioTrack)
     if (!localAudioTrack) {
       const newLocalAudioTrack = await createLocalAudioTrack()
       this.publishLocalTrack(newLocalAudioTrack)
@@ -135,11 +152,19 @@ class Video extends React.Component {
     }
   }
   render() {
-    const { remoteVideoTracks, remoteAudioTracks, localVideoTrack, localAudioTrack } = this.state
+    const {
+      remoteVideoTracks,
+      remoteAudioTracks,
+      localVideoTrack,
+      localAudioTrack,
+      isRoomConnecting,
+      connectRoomError
+    } = this.state
     const remoteVideoTracksArr = Object.values(remoteVideoTracks)
     const remoteAudioTracksArr = Object.values(remoteAudioTracks)
     const isRemoteVideoTrack = remoteVideoTracksArr.length > 0
     const isRemoteAudioTrack = remoteAudioTracksArr.length > 0
+    console.log(this.state)
     return (
       <Wrapper>
         <Controls
@@ -148,6 +173,8 @@ class Video extends React.Component {
           onToggleVideoClick={this.handleToggleVideoClick}
           onToggleAudioClick={this.handleToggleAudioClick}
         />
+        {isRoomConnecting && <Loading />}
+        {connectRoomError && <Error message={connectRoomError} />}
         {(isRemoteAudioTrack || isRemoteVideoTrack) && (
           <RemoteVideo
             autoPlay
@@ -179,7 +206,12 @@ class Video extends React.Component {
 }
 
 Video.propTypes = {
-  room: PropTypes.object.isRequired
+  token: PropTypes.string.isRequired,
+  connectSettings: PropTypes.shape({
+    name: PropTypes.string.isRequired
+  }).isRequired,
+  onParticipantConnected: PropTypes.func,
+  onparticipantDisconnected: PropTypes.func
 }
 
 export default Video

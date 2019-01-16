@@ -8,6 +8,7 @@ const Wrapper = styled.div`
   flex-direction: column;
   top: 0;
   left: 20px;
+  z-index: 10;
 `
 
 const ControlButton = styled.button`
