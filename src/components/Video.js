@@ -160,6 +160,13 @@ class Video extends React.Component {
       isRoomConnecting,
       connectRoomError
     } = this.state
+    const {
+      loadingComp: LoadingComp,
+      errorComp: ErrorComp,
+      localVideoComp: LocalVideoComp,
+      remoteVideoComp: RemoteVideoComp,
+      controlsComp: ControlsComp
+    } = this.props
     const remoteVideoTracksArr = Object.values(remoteVideoTracks)
     const remoteAudioTracksArr = Object.values(remoteAudioTracks)
     const isRemoteVideoTrack = remoteVideoTracksArr.length > 0
@@ -167,16 +174,16 @@ class Video extends React.Component {
     console.log(this.state)
     return (
       <Wrapper>
-        <Controls
+        <ControlsComp
           isVideoEnabled={!!localVideoTrack}
           isAudioEnabled={!!localAudioTrack}
           onToggleVideoClick={this.handleToggleVideoClick}
           onToggleAudioClick={this.handleToggleAudioClick}
         />
-        {isRoomConnecting && <Loading />}
-        {connectRoomError && <Error message={connectRoomError} />}
+        {isRoomConnecting && <LoadingComp />}
+        {connectRoomError && <ErrorComp message={connectRoomError} />}
         {(isRemoteAudioTrack || isRemoteVideoTrack) && (
-          <RemoteVideo
+          <RemoteVideoComp
             autoPlay
             playsInline
             ref={videoEl => {
@@ -190,7 +197,7 @@ class Video extends React.Component {
           />
         )}
         {localVideoTrack && (
-          <LocalVideo
+          <LocalVideoComp
             autoPlay
             playsInline
             ref={videoEl => {
@@ -203,6 +210,14 @@ class Video extends React.Component {
       </Wrapper>
     )
   }
+}
+
+Video.defaultProps = {
+  loadingComp: Loading,
+  errorComp: Erorr,
+  localVideoComp: LocalVideo,
+  remoteVideoComp: RemoteVideo,
+  controlsComp: Controls
 }
 
 Video.propTypes = {
