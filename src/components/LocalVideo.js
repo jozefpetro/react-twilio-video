@@ -1,6 +1,7 @@
+import React from 'react'
 import styled from 'styled-components'
 
-const LocalVideo = styled.video`
+const StyledVideo = styled.video`
   position: absolute;
   width: 20%;
   min-width: 150px;
@@ -8,5 +9,7 @@ const LocalVideo = styled.video`
   right: 20px;
   border-radius: 6px;
 `
+
+const LocalVideo = ({ getVideoRef, ...props }) => <StyledVideo {...props} ref={getVideoRef} />
 
 export default LocalVideo

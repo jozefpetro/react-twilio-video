@@ -225,7 +225,7 @@ class Video extends React.Component {
           <RemoteVideoComp
             autoPlay
             playsInline
-            ref={videoEl => {
+            getVideoRef={videoEl => {
               if (videoEl) {
                 videoEl.srcObject = new MediaStream([
                   ...(isRemoteAudioTrack ? remoteAudioTracksArr.map(getMediaStreamTrack) : []),
@@ -239,7 +239,7 @@ class Video extends React.Component {
           <LocalVideoComp
             autoPlay
             playsInline
-            ref={videoEl => {
+            getVideoRef={videoEl => {
               if (videoEl) {
                 videoEl.srcObject = new MediaStream([getMediaStreamTrack(localVideoTrack)])
               }
