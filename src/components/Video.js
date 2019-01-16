@@ -2,6 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { connect, createLocalAudioTrack, createLocalVideoTrack } from 'twilio-video'
+import ParticipantsList from './ParticipantsList'
 import LocalVideo from './LocalVideo'
 import RemoteVideo from './RemoteVideo'
 import Controls from './Controls'
@@ -30,6 +31,7 @@ const getMediaStreamTrack = track => track.mediaStreamTrack
 
 class Video extends React.Component {
   state = {
+    remoteParticipants: {},
     dominantRemoteVideoTrack: null,
     remoteVideoTracks: {},
     remoteAudioTracks: {},
@@ -53,6 +55,9 @@ class Video extends React.Component {
     if (!this.room) return
     if (localVideoTrack) this.unpublishLocalTrack(localVideoTrack)
     if (localAudioTrack) this.unpublishLocalTrack(localAudioTrack)
+    this.room.removeListener(PARTICIPANT_CONNECTED, this.handleParticipantConnected)
+    this.room.removeListener(PARTICIPANT_DISCONNECTED, this.handleParticipantDisconnected)
+    this.room.removeListener(DOMINANT_SPEAKER_CHANGED, this.handleDominantSpeakerChanged)
     this.room.disconnect()
   }
   initRoom = async () => {
@@ -97,12 +102,25 @@ class Video extends React.Component {
     if (onParticipantConnected) onParticipantConnected(participant)
     participant.on(TRACK_SUBSCRIBED, this.handleRemoteTrackCreate)
     participant.on(TRACK_UNSUBSCRIBED, this.handleRemoteTrackRemove)
+    this.setState(({ remoteParticipants }) => ({
+      remoteParticipants: { ...remoteParticipants, [participant.identity]: participant }
+    }))
   }
   handleParticipantDisconnected = participant => {
     const { onparticipantDisconnected } = this.props
     if (onparticipantDisconnected) onParticipantConnected(onparticipantDisconnected)
     participant.removeListener(TRACK_SUBSCRIBED, this.handleRemoteTrackCreate)
     participant.removeListener(TRACK_UNSUBSCRIBED, this.handleRemoteTrackRemove)
+    this.setState(
+      ({
+        remoteParticipants: {
+          [participant.identity]: deletedRemoteParticipant,
+          ...restRemoteParticipants
+        }
+      }) => ({
+        remoteParticipants: restRemoteParticipants
+      })
+    )
   }
   handleRemoteTrackCreate = remoteTrack => {
     if (remoteTrack.kind === VIDEO) {
@@ -167,6 +185,7 @@ class Video extends React.Component {
   }
   render() {
     const {
+      remoteParticipants,
       dominantRemoteVideoTrack,
       remoteVideoTracks,
       remoteAudioTracks,
@@ -200,6 +219,7 @@ class Video extends React.Component {
         />
         {isRoomConnecting && <LoadingComp />}
         {connectRoomError && <ErrorComp message={connectRoomError} />}
+        <ParticipantsList remoteParticipants={Object.values(remoteParticipants)} />
         {(isRemoteAudioTrack || isRemoteVideoTrack) && (
           <RemoteVideoComp
             autoPlay
