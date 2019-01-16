@@ -1,1 +1,4 @@
-export { default as H1 } from './components/H1'
+export { default as twilioVideo } from 'twilio-video'
+import Video from './components/Video'
+
+export default Video
