@@ -7,7 +7,7 @@ class App extends React.Component {
     return (
       <Router>
         <Switch>
-          <Route path="/video-session/:token" component={VideoSession} />
+          <Route path="/video-session/:identity" component={VideoSession} />
         </Switch>
       </Router>
     )
