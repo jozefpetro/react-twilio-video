@@ -199,7 +199,8 @@ class Video extends React.Component {
       errorComp: ErrorComp,
       localVideoComp: LocalVideoComp,
       remoteVideoComp: RemoteVideoComp,
-      controlsComp: ControlsComp
+      controlsComp: ControlsComp,
+      participantsListComp: ParticipantsListComp
     } = this.props
     const remoteVideoTracksArr = Object.values(remoteVideoTracks)
     const remoteAudioTracksArr = Object.values(remoteAudioTracks)
@@ -217,9 +218,9 @@ class Video extends React.Component {
           onToggleVideoClick={this.handleToggleVideoClick}
           onToggleAudioClick={this.handleToggleAudioClick}
         />
+        <ParticipantsListComp remoteParticipants={Object.values(remoteParticipants)} />
         {isRoomConnecting && <LoadingComp />}
         {connectRoomError && <ErrorComp message={connectRoomError} />}
-        <ParticipantsList remoteParticipants={Object.values(remoteParticipants)} />
         {(isRemoteAudioTrack || isRemoteVideoTrack) && (
           <RemoteVideoComp
             autoPlay
@@ -255,7 +256,8 @@ Video.defaultProps = {
   errorComp: Error,
   localVideoComp: LocalVideo,
   remoteVideoComp: RemoteVideo,
-  controlsComp: Controls
+  controlsComp: Controls,
+  participantsListComp: ParticipantsList
 }
 
 Video.propTypes = {
@@ -263,6 +265,12 @@ Video.propTypes = {
   connectSettings: PropTypes.shape({
     name: PropTypes.string.isRequired
   }).isRequired,
+  loadingComp: PropTypes.func,
+  errorComp: PropTypes.func,
+  localVideoComp: PropTypes.func,
+  remoteVideoComp: PropTypes.func,
+  controlsComp: PropTypes.func,
+  participantsListComp: PropTypes.func,
   onParticipantConnected: PropTypes.func,
   onparticipantDisconnected: PropTypes.func
 }
