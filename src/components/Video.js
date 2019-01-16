@@ -167,6 +167,7 @@ class Video extends React.Component {
   }
   render() {
     const {
+      dominantRemoteVideoTrack,
       remoteVideoTracks,
       remoteAudioTracks,
       localVideoTrack,
@@ -185,7 +186,10 @@ class Video extends React.Component {
     const remoteAudioTracksArr = Object.values(remoteAudioTracks)
     const isRemoteVideoTrack = remoteVideoTracksArr.length > 0
     const isRemoteAudioTrack = remoteAudioTracksArr.length > 0
-    console.log(this.state.dominantRemoteVideoTrack)
+    let remoteVideoTrack = null
+    if (isRemoteVideoTrack) {
+      remoteVideoTrack = dominantRemoteVideoTrack || remoteVideoTracksArr[0]
+    }
     return (
       <Wrapper>
         <ControlsComp
@@ -204,7 +208,7 @@ class Video extends React.Component {
               if (videoEl) {
                 videoEl.srcObject = new MediaStream([
                   ...(isRemoteAudioTrack ? remoteAudioTracksArr.map(getMediaStreamTrack) : []),
-                  ...(isRemoteVideoTrack ? remoteVideoTracksArr.map(getMediaStreamTrack) : [])
+                  ...(isRemoteVideoTrack ? [getMediaStreamTrack(remoteVideoTrack)] : [])
                 ])
               }
             }}
